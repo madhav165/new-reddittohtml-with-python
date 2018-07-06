@@ -18,15 +18,15 @@ if r.status_code != 200:
 	print ('Could not make successful request. Try again later.')
 	exit()
 
-# with open('reddit_file.pickle', 'wb') as f:
-# 	pickle.dump(r, f, pickle.HIGHEST_PROTOCOL)
+with open('reddit_file.pickle', 'wb') as f:
+	pickle.dump(r, f, pickle.HIGHEST_PROTOCOL)
 
-# try:
-# 	with open('reddit_file.pickle', 'rb') as f:
-# 		r = pickle.load(f)
-# except Exception as e:
-# 	print ('Encountered an exception. Exiting.')
-# 	exit()
+try:
+	with open('reddit_file.pickle', 'rb') as f:
+		r = pickle.load(f)
+except Exception as e:
+	print ('Encountered an exception. Exiting.')
+	exit()
 
 soup = BeautifulSoup(r.content, 'lxml')
 
@@ -53,12 +53,13 @@ op_content_divs = op_div.find_all('div', recursive=False)
 
 op_points = op_content_divs[0].div.div.text
 rp.set_op_points('{} points'.format(op_points))
-
 op_name = op_content_divs[1].div.div.div.a.text[2:]
-op_age = op_content_divs[1].div.div.find('a', recursive=False).text
+if op_content_divs[1].div.div.div.find('a', recursive=False) is not None:
+	op_age = op_content_divs[1].div.div.div.find('a', recursive=False).text
+else:
+	op_age = op_content_divs[1].div.div.div.div.find('a', recursive=False).text
 rp.set_op_age(op_age)
 rp.set_op_name(op_name)
-
 post_title = op_content_divs[2].span.h2
 post_title.attrs=[]
 rp.set_title(post_title)
@@ -76,7 +77,10 @@ comments_divs = comments_div.find_all('div', recursive=False)
 for comment_div in comments_divs:
 	comment_divs = comment_div.div.div.find_all('div', recursive=False)[-1].find_all('div', recursive=False)[-1].find_all('div', recursive=False)
 	comment_context_div = comment_divs[0]
-	comment_user = comment_context_div.div.a.text
+	if comment_context_div.find('div', recursive=False).find('a', recursive=False) is not None:
+		comment_user = comment_context_div.find('div', recursive=False).a.text
+	else:
+		comment_user = '[deleted]'
 	comment_points = comment_context_div.find('span', recursive=False).text
 	comment_age = comment_context_div.find('a', recursive=False).span.text
 	comment_content_div = comment_divs[1].find('div', recursive=False)
